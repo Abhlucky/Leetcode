@@ -1,59 +1,38 @@
 class Solution:
     def hasValidPath(self, grid):
-        m = len(grid)
-        n = len(grid[0])
+        m, n = len(grid), len(grid[0])
 
-        # Directions:
-        # 0 = up, 1 = right, 2 = down, 3 = left
-        directions = [
-            (-1, 0),  # up
-            (0, 1),   # right
-            (1, 0),   # down
-            (0, -1)   # left
-        ]
-
-        # Which directions each street connects to
-        roads = {
-            1: {1, 3},  # left <-> right
-            2: {0, 2},  # up <-> down
-            3: {2, 3},  # left <-> down
-            4: {1, 2},  # right <-> down
-            5: {0, 3},  # left <-> up
-            6: {0, 1}   # right <-> up
+        dirs = {
+            1: [(0, 1), (0, -1)],
+            2: [(1, 0), (-1, 0)],
+            3: [(0, -1), (1, 0)],
+            4: [(0, 1), (1, 0)],
+            5: [(0, -1), (-1, 0)],
+            6: [(0, 1), (-1, 0)]
         }
 
-        visited = [[False] * n for _ in range(m)]
+        visited = set()
 
-        stack = [(0, 0)]
-        visited[0][0] = True
-
-        while stack:
-            r, c = stack.pop()
-
+        def dfs(r, c):
             if r == m - 1 and c == n - 1:
                 return True
 
-            current_road = grid[r][c]
+            visited.add((r, c))
 
-            for d in roads[current_road]:
-                dr, dc = directions[d]
+            for dr, dc in dirs[grid[r][c]]:
+                nr, nc = r + dr, c + dc
 
-                nr = r + dr
-                nc = c + dc
-
-                # Check boundaries
-                if nr < 0 or nr >= m or nc < 0 or nc >= n:
+                if not (0 <= nr < m and 0 <= nc < n):
                     continue
 
-                # Opposite direction
-                opposite = (d + 2) % 4
-
-                # The next street must connect back to current street
-                if opposite not in roads[grid[nr][nc]]:
+                if (nr, nc) in visited:
                     continue
 
-                if not visited[nr][nc]:
-                    visited[nr][nc] = True
-                    stack.append((nr, nc))
+                # Next cell must connect back to current cell
+                if (-dr, -dc) in dirs[grid[nr][nc]]:
+                    if dfs(nr, nc):
+                        return True
 
-        return False
+            return False
+
+        return dfs(0, 0)
